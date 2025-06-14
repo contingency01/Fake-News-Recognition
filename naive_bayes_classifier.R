@@ -43,29 +43,6 @@ create_dtm <- function(tokens) {
     cast_dtm(document = doc_id, term = word, value = n)
 }
 
-# Ensure a document-term matrix has a specific set of columns.  Any
-# missing terms are added as empty columns so that matrices can be
-# aligned without subsetting errors when some terms only appear in the
-# train or test set.
-align_dtm <- function(dtm, terms) {
-  cur_terms <- colnames(dtm)
-  missing   <- setdiff(terms, cur_terms)
-
-  if (length(missing) > 0) {
-    # create an empty simple_triplet_matrix for the missing columns
-    empty <- slam::simple_triplet_matrix(i = integer(0),
-                                         j = integer(0),
-                                         v = numeric(0),
-                                         nrow = nrow(dtm),
-                                         ncol = length(missing),
-                                         dimnames = list(Docs = rownames(dtm),
-                                                         Terms = missing))
-    dtm <- cbind(dtm, empty)
-  }
-
-  dtm[, terms]
-}
-
 # Train a multinomial naive Bayes model.  The function also evaluates the
 # model on the provided validation matrix.
 train_naive_bayes <- function(train_matrix, train_labels,
@@ -144,13 +121,11 @@ train_matrix <- create_dtm(tokens_train)
 validation_matrix <- create_dtm(tokens_valid)
 test_matrix <- create_dtm(tokens_test)
 
-# Ensure matrices have the same columns.  Terms appearing only in the
-# test set need to be added to the training and validation matrices so
-# that subsetting does not fail.
+# Ensure matrices have the same columns
 all_terms <- union(colnames(train_matrix), colnames(test_matrix))
-train_matrix <- align_dtm(train_matrix, all_terms)
-validation_matrix <- align_dtm(validation_matrix, all_terms)
-test_matrix <- align_dtm(test_matrix, all_terms)
+train_matrix <- train_matrix[, all_terms]
+validation_matrix <- validation_matrix[, all_terms]
+test_matrix <- test_matrix[, all_terms]
 
 # Train the model
 model <- train_naive_bayes(as.matrix(train_matrix),
@@ -175,7 +150,7 @@ if (file.exists("data/news2.csv")) {
   tokens_news2 <- tokenize_and_clean(news2)
   news2_matrix <- create_dtm(tokens_news2)
   # Align terms with training matrix
-  news2_matrix <- align_dtm(news2_matrix, all_terms)
+  news2_matrix <- news2_matrix[, all_terms]
   news2_pred <- model$predict(as.matrix(news2_matrix))
   conf2 <- table(Predicted = news2_pred, Actual = news2$label)
   acc2 <- sum(diag(conf2)) / sum(conf2)

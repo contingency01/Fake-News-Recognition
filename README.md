@@ -164,14 +164,9 @@ Possible extensions:
 
 No license file is currently included.
 
-If you plan to reuse or distribute this code, consider adding a license such as:
-
-- MIT
-- Apache 2.0
-- GPL-3
-
 ---
 
 ## Author
 
+Barış Kalfa & Yusuf Kenan Şafak
 Developed as an academic/ML text classification project using R and Multinomial Naive Bayes.
